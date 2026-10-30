@@ -1,0 +1,14 @@
+import {pageSize,niceNum,chooseScale,buildSheet} from '../src/reports/drawing-sheets.js';
+let f=0;const t=(n,c)=>{if(!c){f++;console.log('FAIL',n)}else console.log('ok  ',n)};
+t('A3 landscape 420x297',pageSize('A3','landscape').join()=='420,297');t('A4 portrait 210x297',pageSize('A4','portrait').join()=='210,297');t('A1 landscape 841x594',pageSize('A1','landscape').join()=='841,594');
+t('niceNum 37->50 (3.7 is nearer 5 than 2)',niceNum(37)==50);t('niceNum 30->20',niceNum(30)==20);t('niceNum 0.4->0.5',Math.abs(niceNum(.4)-.5)<1e-12);t('niceNum 8->10',niceNum(8)==10);
+t('fit 100x50 m on 350x247 mm -> 1:500',chooseScale(100,50,350,247,1000)==500);t('too big -> null',chooseScale(1e6,1e6,350,247,1000)===null);
+const P={name:'T',units:'m',crs:'',points:[{id:'1',e:0,n:0,z:10,code:'BM'},{id:'2',e:100,n:50,z:12,code:'GR'}],entities:[{type:'pline',pts:[{e:0,n:0},{e:100,n:50}],layer:'ROAD-CL',color:'#d00000'}]};
+const s=buildSheet(P,{size:'A3',orient:'landscape',labels:'idrl',title:'Plan <1>'});
+t('scale chosen 500',s.scale==500);t('k = 2 mm/m',Math.abs(s.k-2)<1e-12);
+t('map (0,0) -> x=85 mm',Math.abs(s.X(0)-85)<1e-9);t('map (0,0) -> y=183.5 mm',Math.abs(s.Y(0)-183.5)<1e-9);t('map (100,50) -> x=285, y=83.5',Math.abs(s.X(100)-285)<1e-9&&Math.abs(s.Y(50)-83.5)<1e-9);
+t('no warnings when it fits',s.warn.length==0);t('svg mm size',s.svg.includes('width="420mm" height="297mm"'));t('title escaped',s.svg.includes('Plan &lt;1&gt;'));t('north arrow + scale bar + legend',s.svg.includes('Grid North')&&s.svg.includes('Scale 1:500')&&s.svg.includes('LEGEND')&&s.svg.includes('ROAD-CL'));
+const c=buildSheet(P,{size:'A4',orient:'portrait',scale:100});t('clip warning at 1:100 on A4',c.warn.some(w=>w.includes('clipped')));
+const ft=buildSheet({...P,units:'ft'},{size:'A3',orient:'landscape',scale:500});t('feet: k=304.8/500',Math.abs(ft.k-0.6096)<1e-12);
+t('empty project -> error',!!buildSheet({units:'m',points:[],entities:[]},{}).err);
+process.exit(f?1:0);

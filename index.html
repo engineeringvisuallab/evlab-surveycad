@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EVLab SurveyCAD</title><link rel="stylesheet" href="styles/main.css"></head>
+<body>
+<header>
+ <div class="brand"><b>EVLab SurveyCAD</b><small>Engineering • Innovation • Learning</small></div>
+ <nav>
+  <button id="bNew">New</button><button id="bImport">Import CSV/TXT…</button><button id="bSample">Load sample</button>
+  <button id="bSave">Save (local)</button><button id="bRecover">Recover last</button>
+  <button id="bExport">Export JSON</button><button id="bOpen">Open JSON…</button>
+  <button id="bSheet">Sheet…</button><button id="bFeat">Auto features…</button><button id="bCalc">Calculations…</button><button id="bFit">Fit</button>
+  <span class="tg"><button data-tool="select" class="on" title="Select (Esc)">Select</button><button data-tool="line" title="Line: 2 clicks">Line</button><button data-tool="pline" title="Polyline: click, double-click/Enter to finish">Polyline</button><button data-tool="text">Text</button><button data-tool="dim" title="Distance dimension: 2 clicks">Dim</button></span>
+  <button id="bUndo" title="Ctrl+Z">Undo</button><button id="bRedo" title="Ctrl+Y">Redo</button><button id="bDel" title="Delete selected CAD object">Delete</button>
+  <button data-x="csv">CSV</button><button data-x="geojson">GeoJSON</button><button data-x="dxf">DXF</button><button data-x="svg">SVG</button><button id="bTheme">Light/Dark</button>
+  <span class="ni" title="Not implemented yet">Drawing · Surface · Alignment (later milestones)</span>
+ </nav>
+ <input type="file" id="fCsv" hidden accept=".csv,.tsv,.txt"><input type="file" id="fJson" hidden accept=".json">
+</header>
+<main>
+ <aside id="left">
+  <div class="tabs"><button data-t="pts" class="on">Points</button><button data-t="lay">Layers</button></div>
+  <div id="tpts"><input id="search" placeholder="Search points…"><div class="tw"><table id="tbl"></table></div></div>
+  <div id="tlay" hidden></div>
+ </aside>
+ <section id="center"><canvas id="cv"></canvas><div id="empty">No points yet. Use <b>Load sample</b> or <b>Import CSV/TXT…</b></div></section>
+ <aside id="right"><h4>Properties</h4><div id="props">Select a point.</div>
+  <h4>Project</h4><label>Name <input id="pName"></label><label>Units <select id="pUnits"><option>m</option><option>ft</option></select></label>
+  <label>CRS (label only) <input id="pCrs" placeholder="Local / undefined"></label><label>Notes <textarea id="pNotes"></textarea></label></aside>
+</main>
+<div id="log"></div>
+<footer><span id="sCur">E –  N –</span><span id="sTool">Tool: select</span><span id="sUnits"></span><span id="sCrs"></span><span id="sCount"></span><span>Scale <span id="sScale"></span></span></footer>
+<dialog id="dlg"><h3>Import preview</h3><div id="dBody"></div><menu><button id="dCancel">Cancel</button><button id="dOk">Accept</button></menu></dialog>
+<dialog id="cdlg"><h3>Survey calculations</h3>
+<select id="cMode"><option value="inv">Inverse (join)</option><option value="fwd">Forward (polar)</option><option value="area">Boundary area/perimeter</option><option value="lev">Leveling</option><option value="trv">Traverse (Bowditch)</option></select>
+<p id="cHelp"></p><textarea id="cIn" rows="8" style="width:min(640px,90vw);font-family:monospace"></textarea>
+<menu><button id="cRun">Run</button><button id="cDl">Download report (HTML)</button><button id="cPr">Print</button><button id="cClose">Close</button></menu>
+<div id="cOut" style="max-height:30vh;overflow:auto"></div><small id="cNote"></small></dialog>
+<dialog id="fdlg"><h3>Feature-code automation</h3>
+<p><small>Codes in the point list become blocks (symbols) and linework. Rule line: code,type(P/L/G),layer,symbol,color,AutoCAD colour no.,chainage(1). String number goes after the code (CL1, RE-L2); put END or CLOSE in the code/description to end or close a string. Points are joined in ascending numeric Point ID.</small></p>
+<textarea id="fRules" rows="12" style="width:min(700px,92vw);font-family:monospace;font-size:12px"></textarea>
+<p><label>Chainage interval <input id="fCh" type="number" value="20" min="0" style="width:70px"> m</label> <label>Start chainage <input id="fCs" type="number" value="0" style="width:70px"> m</label> <label>Symbol/text size <input id="fSz" type="number" value="1" min="0.01" step="0.1" style="width:70px"> model units</label></p>
+<menu><button id="fRun">Run auto-process</button><button id="fRst">Reset rules</button><button id="fClose">Close</button></menu><div id="fOut" style="max-height:26vh;overflow:auto"></div></dialog>
+<dialog id="sdlg"><h3>Drawing sheet / print preview</h3>
+<p><label>Size <select id="sSize"><option>A4</option><option>A3</option><option>A2</option><option>A1</option></select></label> <label>Orientation <select id="sOri"><option value="landscape">Landscape</option><option value="portrait">Portrait</option></select></label>
+<label>Scale <select id="sScale2"><option value="">Fit (auto)</option><option value="100">1:100</option><option value="200">1:200</option><option value="250">1:250</option><option value="500">1:500</option><option value="1000">1:1000</option><option value="2000">1:2000</option><option value="2500">1:2500</option><option value="5000">1:5000</option><option value="10000">1:10000</option><option value="20000">1:20000</option><option value="25000">1:25000</option><option value="50000">1:50000</option></select></label> <label>Point labels <select id="sLab"><option value="id">ID</option><option value="idrl">ID + RL</option><option value="none">None</option></select></label></p>
+<p><label>Title <input id="sTitle" style="width:200px"></label> <label>Drawing no. <input id="sNo" style="width:100px"></label> <label>Revision <input id="sRev" style="width:50px"></label> <label>Date <input id="sDate" type="date"></label></p>
+<menu><button id="sUpd">Update preview</button><button id="sPrint">Print / Save PDF</button><button id="sSvg">Download SVG</button><label>PNG dpi <select id="sDpi"><option>96</option><option selected>150</option><option>300</option></select></label><button id="sPng">Download PNG</button><button id="sClose">Close</button></menu>
+<div id="sWarn"></div><div id="sPrev" style="width:min(900px,90vw);max-height:60vh;overflow:auto"></div></dialog>
+<script type="module" src="src/app.js"></script>
+</body></html>
