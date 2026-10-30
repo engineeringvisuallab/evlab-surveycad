@@ -1,4 +1,4 @@
-# EVLab SurveyCAD — Milestone 3 complete (Engineering Visual Lab)
+# EVLab SurveyCAD — Milestone 6 (Engineering Visual Lab)
 Browser survey CAD for GitHub Pages. No server, Node, API key or account needed.
 
 ## Publish (GitHub Pages)
@@ -19,7 +19,7 @@ Limits: no angular misclosure, no transit rule, no leveling adjustment (closing 
 
 ## Added in Milestone 3
 CAD tools: Line, Polyline (double-click/Enter to finish), Text, distance Dim; snapping to survey points, vertices and midpoints (orange marker); select/delete CAD objects; Undo/Redo (Ctrl+Z/Y) for CAD objects and imports. Entities save with the project. Export: CSV points, GeoJSON (grid E/N, NOT lon/lat), DXF (POINT, LINE, LWPOLYLINE, TEXT; dimensions exported as LINE+TEXT, no native DIMENSION), SVG.
-Limits: DXF output not verified in AutoCAD/Civil 3D (only structure-tested); no DXF import; no move/copy/rotate/offset, window select, intersection snap or layer editing for CAD objects; undo does not cover description edits.
+Limits: DXF output not verified in AutoCAD/Civil 3D (only structure-tested); no DXF import; no intersection snap or layer editing for CAD objects; undo does not cover description edits.
 
 ## Auto features (feature-code automation)
 Toolbar **Auto features…**: reads each point's code and (1) draws point blocks (symbols: tree, pole, manhole, valve, hydrant, benchmark, control, culvert…), (2) joins coded points into polylines/polygons: road centreline (CL), road edges (RE, RE-L, RE-R), river bank (RV), canal bank (CN), drain (DR), embankment top/toe, fence, boundary, building, (3) puts chainage ticks and labels (0+020 style) on lines flagged for chainage, (4) lists warnings: unknown codes, one-point strings, duplicate vertices.
@@ -32,8 +32,27 @@ Sheet sizes A4, A3, A2, A1, portrait or landscape. Scale = Fit (smallest standar
 Outputs: print preview in the dialog, Print / Save PDF (browser print dialog, choose "Save as PDF"), SVG download, PNG download at 96/150/300 dpi (capped at 8000 px on the long side).
 Limits: one sheet per project (no multiple sheets or sheet views yet); the whole drawing is placed on the sheet (no cropping window); no rotated sheet view; legend is automatic; title-block layout is fixed; PNG of the on-screen canvas view is not provided, only PNG of the sheet.
 
+## Surface, contours, profile, cross-sections (toolbar: Surface…)
+TIN: Delaunay triangulation (Bowyer-Watson, own implementation, tested for the empty-circle property) from points with RL. Codes in the "exclude" list (trees, poles, buildings...) are not used as ground. Duplicate XY points are ignored with a warning; fewer than 3 points or collinear data give an error. Optional boundary (a closed polyline) and maximum triangle edge length remove triangles that span gaps or lie outside; without either, the TIN edge follows the convex hull and a warning says so. Levels inside triangles are linear interpolation; nothing is extrapolated.
+Contours: from the TIN at a chosen interval; major contours every N and optional labels; drawn on layers CONTOUR-MINOR / CONTOUR-MAJOR. Optional TIN edges (layer TIN) and spot-level text (SPOT-LEVEL). Regenerating replaces only surface-generated objects. Everything exports to DXF/SVG/sheets with the rest of the drawing.
+Profile: pick an open polyline (e.g. the road centreline), interval and start chainage; table of chainage, E, N, RL, delta RL and gradient % plus a profile plot with independent horizontal and vertical scales. Cross-sections: left/right offsets (negative = left of travel direction, positive = right) at each station, plotted and exported as a station-wise CSV. All levels are labelled "interpolated (TIN)"; stations outside the TIN have no level.
+Limits: the profile plot is a screen/report SVG, not yet placed on a drawing sheet; the O(n^2) triangulation is slow above a few thousand points.
+
+## Milestone 5: breaklines, colouring, design levels, cut/fill
+Breaklines: drawing polylines on the layers listed in "Breakline layers" (default ROAD-EDGE, RIVER-BANK, CANAL-BANK, EMB-TOP, EMB-TOE, DRAIN) are forced into the TIN as edges (edge flipping, Sloan method). A breakline vertex must be a surface point (same E,N); other surface points lying on a segment split it. Segments that cannot be enforced (crossing breaklines, outside the TIN) or whose vertex is not a surface point are skipped and reported. Triangle edges are not re-optimised to Delaunay after enforcement.
+Elevation colouring: "colour by elevation" fills each triangle by mean RL class (2-12 classes, green to brown) on layer TIN-COLOUR; the class ranges are listed. Fills export to DXF (3DFACE), SVG and drawing sheets.
+Design levels: type "chainage,RL" lines (metres). Levels are linear between the lines and there is no extrapolation outside them. The profile then shows the design line (blue dashed) and a "Ground - design" column (positive = cut, negative = fill).
+Cut/fill volumes (Cut / fill volumes button): for each station the ground section is compared with a simple template: flat formation of the given width at design level, then cut and fill side slopes (H:1) that run to daylight. Volume = average end area between consecutive stations. Sections that leave the TIN, find no daylight within the max offset, or have no design level are skipped and flagged, never estimated.
+Limits: no crossfall, superelevation, pavement layers, topsoil strip, drains or shrink/swell; average end area (no prismoidal correction); no surface-to-surface (TIN to TIN) volumes; no mass-haul; design levels are straight grades between your points (no vertical curves); cross-section plots do not show the design template.
+
+## Milestone 6: alignment, setting-out, intersections, edit tools
+**Alignment…**: enter PIs as `E,N,R` lines (R = circular curve radius). The tool builds tangents and fillet arcs (T = R tan(Δ/2), L = R·Δ), checks that tangents fit on each leg, and gives a setting-out table at your interval plus TC/CT points, with tangent azimuth, bearing and coordinates at chosen offsets (positive = right of the chainage direction, negative = left). "Draw alignment" adds the centreline with chainage ticks and TC/CT labels (layers ALIGNMENT, ALIGN-CH) and it can be chosen as the profile/cross-section alignment. "Locate points" gives chainage and offset for point IDs or typed E,N, flagging points beyond the alignment ends. CSV and HTML report downloads.
+**Calculations…** now also has line-line and line-circle intersections (reports whether the point lies inside the segments).
+**Edit tools:** Window select (drag a box; fully-inside objects; Shift+drag pans), Move (dE,dN), Copy, Rotate (degrees clockwise, optional centre), Offset (mitred, positive = right of drawing direction) and Delete work on the selection. Survey points are never moved. Auto-generated objects (features, surface, alignment) are skipped: regenerate them instead. All are undoable.
+Limits: circular curves only (no spirals, compound curves need tangents that fit); no vertical curves; arcs are drawn and exported as polylines (no DXF bulge arcs); alignment chainage in the profile tool follows the drawn polyline, which differs from the true arc length by a few millimetres at most; no intersection snap; window select counts only objects fully inside the box; no trim, extend or fillet tools.
+
 ## Not implemented yet
 Menus beyond the toolbar, TIN/contours, profiles, DXF import, CRS transformation (CRS is a label only), coordinate editing, bulk edit. Changing Units only relabels; it does not convert values.
 
 ## Tests
-`node tests/geometry.test.js` and `node tests/calc.test.js` and `node tests/export.test.js` and `node tests/feature.test.js` and `node tests/sheet.test.js` (needs Node only for developers; not needed to run the app).
+`node tests/geometry.test.js` and `node tests/calc.test.js` and `node tests/export.test.js` and `node tests/feature.test.js` and `node tests/sheet.test.js` and `node tests/surface.test.js` and `node tests/volume.test.js` and `node tests/alignment.test.js` (needs Node only for developers; not needed to run the app).

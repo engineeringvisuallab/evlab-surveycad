@@ -8,9 +8,9 @@
   <button id="bNew">New</button><button id="bImport">Import CSV/TXT…</button><button id="bSample">Load sample</button>
   <button id="bSave">Save (local)</button><button id="bRecover">Recover last</button>
   <button id="bExport">Export JSON</button><button id="bOpen">Open JSON…</button>
-  <button id="bSheet">Sheet…</button><button id="bFeat">Auto features…</button><button id="bCalc">Calculations…</button><button id="bFit">Fit</button>
-  <span class="tg"><button data-tool="select" class="on" title="Select (Esc)">Select</button><button data-tool="line" title="Line: 2 clicks">Line</button><button data-tool="pline" title="Polyline: click, double-click/Enter to finish">Polyline</button><button data-tool="text">Text</button><button data-tool="dim" title="Distance dimension: 2 clicks">Dim</button></span>
-  <button id="bUndo" title="Ctrl+Z">Undo</button><button id="bRedo" title="Ctrl+Y">Redo</button><button id="bDel" title="Delete selected CAD object">Delete</button>
+  <button id="bAlign">Alignment…</button><button id="bSurf">Surface…</button><button id="bSheet">Sheet…</button><button id="bFeat">Auto features…</button><button id="bCalc">Calculations…</button><button id="bFit">Fit</button>
+  <span class="tg"><button data-tool="select" class="on" title="Select (Esc)">Select</button><button data-tool="line" title="Line: 2 clicks">Line</button><button data-tool="pline" title="Polyline: click, double-click/Enter to finish">Polyline</button><button data-tool="text">Text</button><button data-tool="window" title="Window select: drag a box around objects (Shift+drag pans)">Window</button><button data-tool="dim" title="Distance dimension: 2 clicks">Dim</button></span>
+  <button id="bUndo" title="Ctrl+Z">Undo</button><button id="bRedo" title="Ctrl+Y">Redo</button><button id="bMove">Move</button><button id="bCopy">Copy</button><button id="bRot">Rotate</button><button id="bOffs">Offset</button><button id="bDel" title="Delete selected CAD object">Delete</button>
   <button data-x="csv">CSV</button><button data-x="geojson">GeoJSON</button><button data-x="dxf">DXF</button><button data-x="svg">SVG</button><button id="bTheme">Light/Dark</button>
   <span class="ni" title="Not implemented yet">Drawing · Surface · Alignment (later milestones)</span>
  </nav>
@@ -31,7 +31,7 @@
 <footer><span id="sCur">E –  N –</span><span id="sTool">Tool: select</span><span id="sUnits"></span><span id="sCrs"></span><span id="sCount"></span><span>Scale <span id="sScale"></span></span></footer>
 <dialog id="dlg"><h3>Import preview</h3><div id="dBody"></div><menu><button id="dCancel">Cancel</button><button id="dOk">Accept</button></menu></dialog>
 <dialog id="cdlg"><h3>Survey calculations</h3>
-<select id="cMode"><option value="inv">Inverse (join)</option><option value="fwd">Forward (polar)</option><option value="area">Boundary area/perimeter</option><option value="lev">Leveling</option><option value="trv">Traverse (Bowditch)</option></select>
+<select id="cMode"><option value="inv">Inverse (join)</option><option value="fwd">Forward (polar)</option><option value="area">Boundary area/perimeter</option><option value="lev">Leveling</option><option value="trv">Traverse (Bowditch)</option><option value="int">Intersection: line-line</option><option value="lc">Intersection: line-circle</option></select>
 <p id="cHelp"></p><textarea id="cIn" rows="8" style="width:min(640px,90vw);font-family:monospace"></textarea>
 <menu><button id="cRun">Run</button><button id="cDl">Download report (HTML)</button><button id="cPr">Print</button><button id="cClose">Close</button></menu>
 <div id="cOut" style="max-height:30vh;overflow:auto"></div><small id="cNote"></small></dialog>
@@ -46,5 +46,30 @@
 <p><label>Title <input id="sTitle" style="width:200px"></label> <label>Drawing no. <input id="sNo" style="width:100px"></label> <label>Revision <input id="sRev" style="width:50px"></label> <label>Date <input id="sDate" type="date"></label></p>
 <menu><button id="sUpd">Update preview</button><button id="sPrint">Print / Save PDF</button><button id="sSvg">Download SVG</button><label>PNG dpi <select id="sDpi"><option>96</option><option selected>150</option><option>300</option></select></label><button id="sPng">Download PNG</button><button id="sClose">Close</button></menu>
 <div id="sWarn"></div><div id="sPrev" style="width:min(900px,90vw);max-height:60vh;overflow:auto"></div></dialog>
+<dialog id="udlg"><h3>Surface, profile and cross-sections</h3>
+<fieldset><legend>1. Surface (TIN and contours)</legend>
+<p><label>Exclude codes (not ground) <input id="uEx" value="TREE,POLE,BLD,HYD,MH" style="width:200px"></label> <label>Max triangle edge (0 = none) <input id="uMax" type="number" value="0" min="0" style="width:70px"></label> <label>Boundary <select id="uBnd"></select></label></p>
+<p><label>Contour interval <input id="uInt" type="number" value="0.5" min="0.001" step="0.1" style="width:70px"></label> <label>Major every <input id="uMaj" type="number" value="5" min="1" style="width:50px"></label>
+<label><input type="checkbox" id="uLab" checked> label major</label> <label><input type="checkbox" id="uTin"> show TIN edges</label> <label><input type="checkbox" id="uSpot"> spot levels</label> <label><input type="checkbox" id="uCol"> colour by elevation, classes <input id="uCls" type="number" value="8" min="2" max="12" style="width:45px"></label></p>
+<p><label>Breakline layers <input id="uBrk" value="ROAD-EDGE,RIVER-BANK,CANAL-BANK,EMB-TOP,EMB-TOE,DRAIN" style="width:380px"></label></p>
+<menu><button id="uGen">Generate surface</button><button id="uClr">Remove surface objects</button></menu></fieldset>
+<fieldset><legend>2. Profile and cross-sections (needs the surface)</legend>
+<p><label>Alignment <select id="uAln"></select></label> <label>Interval <input id="uStep" type="number" value="20" min="0.1" style="width:60px"></label> <label>Start chainage <input id="uStart" type="number" value="0" style="width:60px"></label></p>
+<p><label>Left <input id="uL" type="number" value="15" min="0" style="width:55px"></label> <label>Right <input id="uR" type="number" value="15" min="0" style="width:55px"></label> <label>Offset step <input id="uOff" type="number" value="5" min="0.1" style="width:55px"></label>
+<label>H 1: <input id="uHs" type="number" value="500" style="width:60px"></label> <label>V 1: <input id="uVs" type="number" value="100" style="width:60px"></label></p>
+<menu><button id="uProf">Longitudinal profile</button><button id="uSec">Cross-sections</button><button id="uCsv">Download CSV</button><button id="uRep">Download report</button></menu></fieldset>
+<fieldset><legend>3. Design levels and cut/fill volumes (uses the alignment, interval and surface above)</legend>
+<p><label>Design levels, one per line: chainage,RL (metres) <textarea id="uDes" rows="4" style="width:180px" placeholder="0,10.0&#10;100,10.9"></textarea></label>
+<label>Formation width <input id="uW" type="number" value="7" min="0.1" style="width:55px"></label> <label>Cut slope H:1 <input id="uCH" type="number" value="1.5" min="0.1" step="0.1" style="width:55px"></label> <label>Fill slope H:1 <input id="uFH" type="number" value="2" min="0.1" step="0.1" style="width:55px"></label>
+<label>Max offset <input id="uMo" type="number" value="40" style="width:55px"></label> <label>Sample step <input id="uSt" type="number" value="0.5" min="0.05" step="0.05" style="width:55px"></label></p>
+<menu><button id="uVol">Cut / fill volumes</button></menu></fieldset>
+<menu><button id="uClose">Close</button></menu><div id="uOut" style="max-height:34vh;overflow:auto;max-width:92vw"></div></dialog>
+<dialog id="adlg"><h3>Horizontal alignment, setting-out and offsets</h3>
+<p><small>One PI per line: E,N,R (R = curve radius, leave blank or 0 for no curve; ignored at the first and last PI). Arcs are circular; no spirals. Offset: positive = right of the direction of chainage, negative = left.</small></p>
+<textarea id="aPis" rows="6" style="width:min(520px,92vw);font-family:monospace" placeholder="500000,2500000,&#10;500100,2500000,30&#10;500100,2500100,"></textarea>
+<p><label>Start chainage <input id="aStart" type="number" value="0" style="width:70px"></label> <label>Interval <input id="aStep" type="number" value="20" min="0.5" style="width:60px"></label> <label>Offsets (comma list) <input id="aOffs" value="-5,5" style="width:100px"></label> <label><input type="checkbox" id="aCh" checked> chainage ticks/labels</label></p>
+<menu><button id="aCalc">Compute setting-out table</button><button id="aDraw">Draw alignment</button><button id="aCsv">Download CSV</button><button id="aRep">Download report</button></menu>
+<p><label>Locate points (point IDs or E,N, one per line) → chainage and offset<br><textarea id="aPts" rows="3" style="width:min(520px,92vw);font-family:monospace"></textarea></label></p>
+<menu><button id="aLoc">Compute chainage/offset</button><button id="aClose">Close</button></menu><div id="aOut" style="max-height:34vh;overflow:auto;max-width:92vw"></div></dialog>
 <script type="module" src="src/app.js"></script>
 </body></html>
