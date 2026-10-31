@@ -4,6 +4,8 @@ import {History} from './core/history.js';
 import {toCSV,toGeoJSON,toDXF,toSVG} from './io/exporters.js';
 import {parseRules,processFeatures,pointStyle,DEFAULT_RULES} from './survey/feature-codes.js';
 import {table as rtable} from './reports/report.js';
+import {initImport} from './ui/import-panel.js';
+import {initPanels} from './ui/panels.js';
 import {initAlignment} from './ui/alignment-panel.js';
 import {movePts,rotatePts,offsetPolyline} from './core/edit-ops.js';
 import {initSurface} from './ui/surface-panel.js';
@@ -57,7 +59,7 @@ $('dCancel').onclick=()=>{$('dlg').close();pending=null;log('Import cancelled')}
 $('dOk').onclick=()=>{const r=pending.res;snap();P.points.push(...r.pts);$('dlg').close();log(`Imported ${r.pts.length} points, ${r.rej.length} rejected, ${r.warn.length} warnings from ${pending.name}`,r.rej.length||r.warn.length?'w':'o');
  r.rej.forEach(x=>log(`Rejected row ${x.row}: ${x.why}`,'e'));r.warn.forEach(w=>log(w,'w'));pending=null;refresh(true);dirty()};
 $('bImport').onclick=()=>$('fCsv').click();
-$('fCsv').onchange=async e=>{const f=e.target.files[0];if(f)openImport(await f.text(),f.name);e.target.value=''};
+$('fCsv').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(f)await routeImport(f)};
 $('bSample').onclick=async()=>{try{const r=await fetch('samples/sample-points.csv');if(!r.ok)throw new Error('HTTP '+r.status);openImport(await r.text(),'sample-points.csv')}catch(e){log('Could not load sample: '+e.message+' (open the app via GitHub Pages or a web server, not file://)','e')}};
 $('bNew').onclick=()=>{if(P.points.length&&!confirm('Discard current project? Unsaved changes are lost.'))return;P=newProject();H.reset();eng.sel=null;eng.hidden.clear();refresh();sel(null);log('New project')};
 $('bSave').onclick=()=>save(false);
@@ -101,7 +103,13 @@ $('fRun').onclick=()=>{const pr=parseRules($('fRules').value);if(pr.errors.lengt
  const r=processFeatures(P.points,pr.rules,{chInterval:Number($('fCh').value)||0,chStart:Number($('fCs').value)||0,symSize:sz});P.entities.push(...r.ents);eng.selEnt=null;refresh(true);dirty();
  $('fOut').innerHTML=(r.rep.strings.length?rtable(['String','Layer','Points','Length','Closed'],r.rep.strings.map(s=>[s.name,s.layer,s.n,s.len.toFixed(3),s.closed?'yes':'no'])):'<p class="w">No strings were created.</p>')+`<p>${r.rep.plain} point(s) shown as blocks/plain points.</p>`+r.rep.warnings.map(w=>`<p class="w">${esc(w)}</p>`).join('');
  log(`Auto features: ${r.rep.strings.length} strings, ${r.ents.length} drawing objects, ${r.rep.warnings.length} warnings (Ctrl+Z to undo)`,r.rep.warnings.length?'w':'o');r.rep.warnings.forEach(w=>log(w,'w'))};
-initCalc({P:()=>P,log});initSheet({P:()=>P,log,dirty});initSurface({P:()=>P,log,snap,refresh,dirty});initAlignment({P:()=>P,log,snap,refresh,dirty});
+initCalc({P:()=>P,log});initSheet({P:()=>P,log,dirty});initSurface({P:()=>P,log,snap,refresh,dirty});initAlignment({P:()=>P,log,snap,refresh,dirty});initPanels(()=>eng.draw());
+const xImport=initImport({P:()=>P,log,snap,refresh,dirty});
+async function routeImport(f){const n=f.name.toLowerCase(),t=await f.text();
+ if(n.endsWith('.dxf'))return xImport('dxf',f.name,t);if(n.endsWith('.gsi'))return xImport('gsi',f.name,t);if(n.endsWith('.xml')||n.endsWith('.jxl'))return xImport('xml',f.name,t);
+ if(n.endsWith('.dwg')||n.endsWith('.job')||n.endsWith('.jbj')||n.endsWith('.zip'))return log(f.name+': this binary/compressed format is not supported. Export DXF, CSV, GSI, JobXML or LandXML from the source software','e');
+ openImport(t,f.name)}
+$('center').ondragover=e=>e.preventDefault();$('center').ondrop=async e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f)await routeImport(f)};
 function editable(){const all=eng.selList();if(!all.length){log('Select CAD objects first (Select or Window tool)','w');return null}const ed=all.filter(e=>!e.auto&&!e.gen&&e.type!='fill');
  if(!ed.length){log('Selected objects are auto-generated (features, surface, alignment): regenerate them instead of editing','w');return null}if(ed.length<all.length)log((all.length-ed.length)+' auto-generated object(s) skipped','w');return ed}
 const nums=(s,k)=>{if(s===null)return null;const v=s.split(/[,\s]+/).filter(Boolean).map(Number);return v.length>=k&&v.every(isFinite)?v:undefined};

@@ -4,8 +4,9 @@
 <body>
 <header>
  <div class="brand"><b>EVLab SurveyCAD</b><small>Engineering • Innovation • Learning</small></div>
+ <span class="pt" title="Show or hide panels. Keys: [ left, ] right, \ log, / toolbar, 0 focus mode"><button data-panel="tools">Toolbar</button><button data-panel="left">Left</button><button data-panel="right">Right</button><button data-panel="log">Log</button><button id="bFocus" title="Hide or restore all panels (key 0)">Focus</button></span>
  <nav>
-  <button id="bNew">New</button><button id="bImport">Import CSV/TXT…</button><button id="bSample">Load sample</button>
+  <button id="bNew">New</button><button id="bImport" title="CSV, TSV, TXT, DXF, Leica GSI, Trimble JobXML (.jxl), LandXML (.xml). You can also drop a file on the drawing.">Import file…</button><button id="bSample">Load sample</button>
   <button id="bSave">Save (local)</button><button id="bRecover">Recover last</button>
   <button id="bExport">Export JSON</button><button id="bOpen">Open JSON…</button>
   <button id="bAlign">Alignment…</button><button id="bSurf">Surface…</button><button id="bSheet">Sheet…</button><button id="bFeat">Auto features…</button><button id="bCalc">Calculations…</button><button id="bFit">Fit</button>
@@ -14,7 +15,7 @@
   <button data-x="csv">CSV</button><button data-x="geojson">GeoJSON</button><button data-x="dxf">DXF</button><button data-x="svg">SVG</button><button id="bTheme">Light/Dark</button>
   <span class="ni" title="Not implemented yet">Drawing · Surface · Alignment (later milestones)</span>
  </nav>
- <input type="file" id="fCsv" hidden accept=".csv,.tsv,.txt"><input type="file" id="fJson" hidden accept=".json">
+ <input type="file" id="fCsv" hidden accept=".csv,.tsv,.txt,.dxf,.gsi,.xml,.jxl"><input type="file" id="fJson" hidden accept=".json">
 </header>
 <main>
  <aside id="left">
@@ -23,9 +24,9 @@
   <div id="tlay" hidden></div>
  </aside>
  <section id="center"><canvas id="cv"></canvas><div id="empty">No points yet. Use <b>Load sample</b> or <b>Import CSV/TXT…</b></div></section>
- <aside id="right"><h4>Properties</h4><div id="props">Select a point.</div>
-  <h4>Project</h4><label>Name <input id="pName"></label><label>Units <select id="pUnits"><option>m</option><option>ft</option></select></label>
-  <label>CRS (label only) <input id="pCrs" placeholder="Local / undefined"></label><label>Notes <textarea id="pNotes"></textarea></label></aside>
+ <aside id="right"><details open><summary>Properties</summary><div id="props">Select a point.</div></details>
+  <details open><summary>Project</summary><label>Name <input id="pName"></label><label>Units <select id="pUnits"><option>m</option><option>ft</option></select></label>
+  <label>CRS (label only) <input id="pCrs" placeholder="Local / undefined"></label><label>Notes <textarea id="pNotes"></textarea></label></details></aside>
 </main>
 <div id="log"></div>
 <footer><span id="sCur">E –  N –</span><span id="sTool">Tool: select</span><span id="sUnits"></span><span id="sCrs"></span><span id="sCount"></span><span>Scale <span id="sScale"></span></span></footer>
@@ -71,5 +72,8 @@
 <menu><button id="aCalc">Compute setting-out table</button><button id="aDraw">Draw alignment</button><button id="aCsv">Download CSV</button><button id="aRep">Download report</button></menu>
 <p><label>Locate points (point IDs or E,N, one per line) → chainage and offset<br><textarea id="aPts" rows="3" style="width:min(520px,92vw);font-family:monospace"></textarea></label></p>
 <menu><button id="aLoc">Compute chainage/offset</button><button id="aClose">Close</button></menu><div id="aOut" style="max-height:34vh;overflow:auto;max-width:92vw"></div></dialog>
+<dialog id="xdlg"><h3>Import preview</h3><div id="xBody" style="max-height:55vh;overflow:auto;max-width:90vw"></div>
+<label id="xPtsL"><input type="checkbox" id="xPts" checked> Also import DXF POINT entities as survey points (code = layer)</label>
+<menu><button id="xCancel">Cancel</button><button id="xOk">Accept</button></menu></dialog>
 <script type="module" src="src/app.js"></script>
 </body></html>

@@ -1,4 +1,4 @@
-# EVLab SurveyCAD — Milestone 6 (Engineering Visual Lab)
+# EVLab SurveyCAD — Milestone 7 (Engineering Visual Lab)
 Browser survey CAD for GitHub Pages. No server, Node, API key or account needed.
 
 ## Publish (GitHub Pages)
@@ -51,8 +51,18 @@ Limits: no crossfall, superelevation, pavement layers, topsoil strip, drains or 
 **Edit tools:** Window select (drag a box; fully-inside objects; Shift+drag pans), Move (dE,dN), Copy, Rotate (degrees clockwise, optional centre), Offset (mitred, positive = right of drawing direction) and Delete work on the selection. Survey points are never moved. Auto-generated objects (features, surface, alignment) are skipped: regenerate them instead. All are undoable.
 Limits: circular curves only (no spirals, compound curves need tangents that fit); no vertical curves; arcs are drawn and exported as polylines (no DXF bulge arcs); alignment chainage in the profile tool follows the drawn polyline, which differs from the true arc length by a few millimetres at most; no intersection snap; window select counts only objects fully inside the box; no trim, extend or fillet tools.
 
+## Import (toolbar: Import file…, or drop a file on the drawing)
+Formats: CSV/TSV/TXT (column mapping, preset P,N,E,Z,D), **DXF**, **Leica GSI** (GSI8 and GSI16), **Trimble JobXML** (.jxl) and **LandXML** (.xml, CgPoint). Every import shows a preview first and adds nothing until you press Accept; one Ctrl+Z undoes it.
+DXF (ASCII only): POINT (becomes survey points, code = layer, optional), LINE, LWPOLYLINE (bulge arcs converted to short segments), old POLYLINE/VERTEX, TEXT, MTEXT (formatting stripped), CIRCLE and ARC (converted to polylines, sag 0.005 units). Layer names and layer colours are kept. **Anything else (HATCH, SPLINE, INSERT, DIMENSION...) is listed in the preview with its count and is not imported.** Text rotation and DXF units are not converted: the preview says so. Binary DXF and DWG are rejected with advice.
+GSI: word 11 = point number, 81/82/83 = E/N/RL, 71 = code, 84/85 station records ignored, angle/distance-only records skipped and counted (reduction of raw observations is not built yet). JobXML: points from Reductions/Point (or PointRecord) with Grid North/East/Elevation, later records of a name replace earlier ones, deleted records are removed. LandXML: CgPoint text is Northing, Easting, Elevation.
+**Honest status:** the DXF reader is tested on its own exports and hand-made files. The GSI, JobXML and LandXML readers were written from the published structure of the formats and tested on hand-built files, NOT on real files from your instruments. Unit/decimal codes in GSI are the least certain part. Always compare the preview with the instrument display or a known point before accepting, and send a real sample file so the reader can be checked against it.
+Samples: `samples/sample.dxf`, `sample.gsi`, `sample-jobxml.jxl`, `sample-landxml.xml`.
+
+## Panels
+Toolbar, left panel, right panel and log can be hidden and shown with the Toolbar / Left / Right / Log buttons or the keys `/`, `[`, `]`, `\`. Focus (key `0`) hides everything but the canvas and restores it again. Properties and Project sections in the right panel fold individually. The choice is remembered in the browser. See ROADMAP.md for what is still to be built, in stages.
+
 ## Not implemented yet
 Menus beyond the toolbar, TIN/contours, profiles, DXF import, CRS transformation (CRS is a label only), coordinate editing, bulk edit. Changing Units only relabels; it does not convert values.
 
 ## Tests
-`node tests/geometry.test.js` and `node tests/calc.test.js` and `node tests/export.test.js` and `node tests/feature.test.js` and `node tests/sheet.test.js` and `node tests/surface.test.js` and `node tests/volume.test.js` and `node tests/alignment.test.js` (needs Node only for developers; not needed to run the app).
+`node tests/geometry.test.js` and `node tests/calc.test.js` and `node tests/export.test.js` and `node tests/feature.test.js` and `node tests/sheet.test.js` and `node tests/surface.test.js` and `node tests/volume.test.js` and `node tests/alignment.test.js` and `node tests/import.test.js` (needs Node only for developers; not needed to run the app).
